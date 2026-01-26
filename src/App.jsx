@@ -146,7 +146,7 @@ function App() {
   return (
     <div className="dashboard">
       <header className="header">
-        <h1>Job Dashboard</h1>
+        <h1>Latest UI/UX Jobs in Berlin</h1>
         <div className="header-info">
           {lastUpdated && (
             <span className="last-updated">
