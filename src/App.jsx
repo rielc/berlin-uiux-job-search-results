@@ -94,7 +94,14 @@ function App() {
       const response = await fetch(API_URL)
       if (!response.ok) throw new Error('Failed to fetch jobs')
       const data = await response.json()
-      setJobs(data)
+      // Deduplicate jobs by link
+      const seen = new Set()
+      const uniqueJobs = data.filter(job => {
+        if (!job.link || seen.has(job.link)) return false
+        seen.add(job.link)
+        return true
+      })
+      setJobs(uniqueJobs)
       setLastUpdated(new Date())
       setError(null)
     } catch (err) {
@@ -170,7 +177,7 @@ function App() {
 
       <div className="jobs-list">
         {filteredJobs.map((job, index) => (
-          <JobCard key={job.link || index} job={job} />
+          <JobCard key={job.id ?? job.link ?? index} job={job} />
         ))}
         {!loading && filteredJobs.length === 0 && (
           <p className="no-jobs">No jobs found</p>
