@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import './App.css'
 
 const API_URL = 'https://flow.gabrielcredico.de/webhook/berlin-ui-ux-job-feed'
 const POLL_INTERVAL = 5 * 60 * 1000 // 5 minutes
@@ -29,35 +28,46 @@ function JobCard({ job }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="job-card">
-      <div className="job-header">
+    <div className="bg-gray-800 dark:bg-gray-800 light:bg-white rounded-xl p-5 border border-gray-700 light:border-gray-200">
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
         <span
-          className="evaluation-badge"
+          className="px-3 py-1 rounded-xl text-xs font-semibold uppercase text-white"
           style={{ backgroundColor: getEvaluationColor(job.evaluation) }}
         >
           {job.evaluation}
         </span>
-        <span className="company">{job.company}</span>
-        <span className="posted-date">Found {formatDate(job.createdAt)}</span>
+        <span className="font-semibold text-gray-200 light:text-gray-800">{job.company}</span>
+        <span className="text-gray-400 text-sm ml-auto">Found {formatDate(job.createdAt)}</span>
       </div>
 
-      <h3 className="job-title">
-        <a href={job.link} target="_blank" rel="noopener noreferrer">
+      <h3 className="m-0 mb-3 text-lg leading-snug">
+        <a
+          href={job.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 no-underline hover:underline"
+        >
           {job.title}
         </a>
       </h3>
 
       {job.skipReason && job.skipReason !== "None" && (
-        <p className="skip-reason">{job.evaluation === "skip" ? "Skip Reason" :  "Note"}: {job.skipReason}</p>
+        <p className="text-gray-400 text-sm m-0 mb-3">
+          {job.evaluation === "skip" ? "Skip Reason" : "Note"}: {job.skipReason}
+        </p>
       )}
 
-      <div className="job-description">
-        <p className={expanded ? 'expanded' : 'collapsed'}>
+      <div>
+        <p
+          className={`m-0 text-gray-300 light:text-gray-600 text-sm leading-relaxed ${
+            expanded ? 'whitespace-pre-wrap' : 'line-clamp-3'
+          }`}
+        >
           {job.description}
         </p>
         {job.description && job.description.length > 200 && (
           <button
-            className="toggle-btn"
+            className="bg-transparent border-none text-blue-400 cursor-pointer py-2 px-0 text-sm hover:underline"
             onClick={() => setExpanded(!expanded)}
           >
             {expanded ? 'Show less' : 'Show more'}
@@ -144,43 +154,55 @@ function App() {
   }
 
   return (
-    <div className="dashboard">
-      <header className="header">
-        <h1>Latest UI/UX Jobs in Berlin</h1>
-        <div className="header-info">
+    <div className="max-w-225 mx-auto p-4">
+      <header className="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <h1 className="m-0 text-2xl">Latest UI/UX Jobs in Berlin</h1>
+        <div className="flex items-center gap-4">
           {lastUpdated && (
-            <span className="last-updated">
+            <span className="text-gray-500 text-sm">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </span>
           )}
-          <button className="refresh-btn" onClick={fetchJobs} disabled={loading}>
+          <button
+            className="py-2 px-4 bg-blue-500 text-white border-none rounded-md cursor-pointer text-sm hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed"
+            onClick={fetchJobs}
+            disabled={loading}
+          >
             {loading ? 'Loading...' : 'Refresh'}
           </button>
         </div>
       </header>
 
-      <div className="filters">
+      <div className="flex gap-2 mb-6 flex-wrap items-center">
         {Object.keys(filters).map(key => (
           <button
             key={key}
-            className={`filter-btn ${filters[key] ? 'active' : ''}`}
+            className={`py-2 px-4 border rounded-full cursor-pointer text-sm capitalize transition-all ${
+              filters[key]
+                ? 'text-white border-transparent'
+                : 'bg-transparent border-gray-700 light:border-gray-300 hover:border-gray-500'
+            }`}
             style={filters[key] ? { backgroundColor: FILTER_COLORS[key] } : {}}
             onClick={() => toggleFilter(key)}
           >
             {filterLabels[key]} ({counts[key]})
           </button>
         ))}
-        <span className="filter-count">Showing {filteredJobs.length} of {jobs.length}</span>
+        <span className="ml-auto text-gray-400 text-sm">Showing {filteredJobs.length} of {jobs.length}</span>
       </div>
 
-      {error && <div className="error">Error: {error}</div>}
+      {error && (
+        <div className="bg-red-100 text-red-600 p-4 rounded-lg mb-4">
+          Error: {error}
+        </div>
+      )}
 
-      <div className="jobs-list">
+      <div className="flex flex-col gap-4">
         {filteredJobs.map((job, index) => (
           <JobCard key={job.id ?? job.link ?? index} job={job} />
         ))}
         {!loading && filteredJobs.length === 0 && (
-          <p className="no-jobs">No jobs found</p>
+          <p className="text-center text-gray-500 py-8">No jobs found</p>
         )}
       </div>
     </div>
