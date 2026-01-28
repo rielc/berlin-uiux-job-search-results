@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import type { Job, EvaluationFilter, FilterState } from './types'
+import { useJobTracker } from './hooks/useJobTracker'
 
 const API_URL = 'https://flow.gabrielcredico.de/webhook/berlin-ui-ux-job-feed'
-const POLL_INTERVAL = 5 * 60 * 1000 // 5 minutes
+const POLL_INTERVAL = 15 * 60 * 1000 // 15 minutes
 
-function formatDate(dateString) {
+function formatDate(dateString: string | undefined): string {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleDateString('de-DE', {
     month: 'short',
@@ -14,7 +16,7 @@ function formatDate(dateString) {
   })
 }
 
-function getEvaluationColor(evaluation) {
+function getEvaluationColor(evaluation: Job['evaluation']): string {
   switch (evaluation) {
     case 'perfect': return '#22c55e'
     case 'good': return '#3b82f6'
@@ -24,7 +26,11 @@ function getEvaluationColor(evaluation) {
   }
 }
 
-function JobCard({ job }) {
+interface JobCardProps {
+  job: Job
+}
+
+function JobCard({ job }: JobCardProps) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -78,7 +84,7 @@ function JobCard({ job }) {
   )
 }
 
-const FILTER_COLORS = {
+const FILTER_COLORS: Record<EvaluationFilter, string> = {
   none: '#9333ea',
   perfect: '#22c55e',
   good: '#3b82f6',
@@ -87,25 +93,29 @@ const FILTER_COLORS = {
 }
 
 function App() {
-  const [jobs, setJobs] = useState([])
+  const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [lastUpdated, setLastUpdated] = useState(null)
-  const [filters, setFilters] = useState({
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [filters, setFilters] = useState<FilterState>({
     none: true,
     perfect: true,
     good: true,
     maybe: true,
     skip: false,
   })
+  const isFirstLoad = useRef(true)
+
+  // Track jobs and send notifications for new ones
+  useJobTracker(jobs, isFirstLoad.current)
 
   const fetchJobs = useCallback(async () => {
     try {
       const response = await fetch(API_URL)
       if (!response.ok) throw new Error('Failed to fetch jobs')
-      const data = await response.json()
+      const data: Job[] = await response.json()
       // Deduplicate jobs by link
-      const seen = new Set()
+      const seen = new Set<string>()
       const uniqueJobs = data.filter(job => {
         if (!job.link || seen.has(job.link)) return false
         seen.add(job.link)
@@ -114,8 +124,9 @@ function App() {
       setJobs(uniqueJobs)
       setLastUpdated(new Date())
       setError(null)
+      isFirstLoad.current = false
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
@@ -127,25 +138,25 @@ function App() {
     return () => clearInterval(interval)
   }, [fetchJobs])
 
-  const toggleFilter = (key) => {
+  const toggleFilter = (key: EvaluationFilter) => {
     setFilters(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
   const filteredJobs = jobs.filter(job => {
     const eval_ = job.evaluation
-    if (!eval_ || eval_ === '') return filters.none
-    return filters[eval_] ?? false
+    if (!eval_) return filters.none
+    return filters[eval_ as EvaluationFilter] ?? false
   })
 
-  const counts = {
-    none: jobs.filter(j => !j.evaluation || j.evaluation === '').length,
+  const counts: Record<EvaluationFilter, number> = {
+    none: jobs.filter(j => !j.evaluation).length,
     perfect: jobs.filter(j => j.evaluation === 'perfect').length,
     good: jobs.filter(j => j.evaluation === 'good').length,
     maybe: jobs.filter(j => j.evaluation === 'maybe').length,
     skip: jobs.filter(j => j.evaluation === 'skip').length,
   }
 
-  const filterLabels = {
+  const filterLabels: Record<EvaluationFilter, string> = {
     none: 'No Evaluation',
     perfect: 'Perfect',
     good: 'Good',
@@ -174,7 +185,7 @@ function App() {
       </header>
 
       <div className="flex gap-2 mb-6 flex-wrap items-center">
-        {Object.keys(filters).map(key => (
+        {(Object.keys(filters) as EvaluationFilter[]).map(key => (
           <button
             key={key}
             className={`py-2 px-4 border rounded-full cursor-pointer text-sm capitalize transition-all ${
