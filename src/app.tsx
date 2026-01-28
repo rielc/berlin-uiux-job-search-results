@@ -4,7 +4,7 @@ import { useSeenJobs } from "./hooks/use-seen-jobs";
 import { JobCard } from "./components/react/job-card";
 
 const API_URL = "https://flow.gabrielcredico.de/webhook/berlin-ui-ux-job-feed";
-const POLL_INTERVAL = 0.125 * 60 * 1000; // 15 minutes
+const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 const KEEPWORDS = [
   "UI",
