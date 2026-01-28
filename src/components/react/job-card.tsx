@@ -18,48 +18,46 @@ export type JobCardProps = {
   isNew?: boolean;
 };
 
-export function JobCard({ job, isNew = false }: JobCardProps) {
-  const [expanded, setExpanded] = useState(false);
-
+export function JobCard({ job, isNew }: JobCardProps) {
   return (
     <div
       className={cn(
         "rounded-xl p-5 border",
         isNew
-          ? "bg-green-400/10 border-green-500/50"
-          : "bg-gray-400/10 border-gray-500/50",
+          ? "bg-green-300/10 border-green-500/50 border"
+          : "bg-gray-100 border-gray-200",
       )}
     >
-      <div className="flex items-center gap-3 mb-3 flex-wrap">
-        {isNew && (
-          <span className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
-        )}
-        <span
-          className={cn("text-gray-800", isNew ? "font-bold" : "font-semibold")}
-        >
-          {job.company}
-        </span>
-        <span className="text-gray-800 text-sm ml-auto">
+      <div className="flex flex-col items-start gap-1 flex-wrap mb-3">
+        <span className="text-gray-800 text-sm flex flex-row items-center gap-3">
+          {isNew && (
+            <span className="w-2.5 h-2.5 rounded-full bg-green-600 animate-pulse" />
+          )}
           Found: {formatDate(job.createdAt)}
         </span>
-      </div>
 
-      <h3 className={cn("m-0 mb-3 text-lg leading-snug", isNew && "font-bold")}>
-        <a
-          href={job.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="uppercase text-blue-800 no-underline hover:underline"
+        <span className={cn("text-gray-800", "font-normal")}>
+          {job.company}
+        </span>
+        <h3
+          className={cn("m-0 mb-3 text-lg leading-snug", isNew && "font-bold")}
         >
-          {job.title}
-        </a>
-      </h3>
+          <a
+            href={job.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="uppercase text-blue-800 underline underline-offset-2"
+          >
+            {job.title}
+          </a>
+        </h3>
+      </div>
 
       <div>
         <p
           className={cn(
-            "m-0 text-gray-800 text-sm leading-relaxed",
-            expanded ? "whitespace-pre-wrap" : "line-clamp-3",
+            "m-0 text-gray-600 text-sm leading-relaxed",
+            "line-clamp-5",
           )}
         >
           {job.description}

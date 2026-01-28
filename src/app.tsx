@@ -114,7 +114,7 @@ export function App() {
             className="py-1.5 px-3 bg-green-600 text-white border-none rounded-md cursor-pointer text-sm hover:bg-green-700"
             onClick={markAllAsSeen}
           >
-            Mark {unseenCount} as read
+            Mark All New Jobs as Read
           </button>
         )}
       </div>
